@@ -1,8 +1,9 @@
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 
-public class LinkedListDeque<T>implements Deque<T> {
+public class LinkedListDeque<T> {
     /* subclass */
     private class StuffNode{
         private T item;
@@ -39,24 +40,24 @@ public class LinkedListDeque<T>implements Deque<T> {
         size = size + 1;
     }
 
-    @Override
+
     public void addLast(T item){
         sentinel.prev.next= new StuffNode(item,sentinel,sentinel.prev);
         sentinel.prev = sentinel.prev.next;
         size += 1;
     }
 
-    @Override
+
     public boolean isEmpty(){
         return size == 0;
     }
 
-    @Override
+
     public int size(){
         return size;
     }
 
-    @Override
+
     public void printDeque(){
         StuffNode p = sentinel.next;
         for(int i = 0; i < size; i += 1){
@@ -66,7 +67,7 @@ public class LinkedListDeque<T>implements Deque<T> {
         System.out.println();
     }
 
-    @Override
+
     public T removeFirst(){
         if(size == 0){
             return null;
@@ -78,7 +79,7 @@ public class LinkedListDeque<T>implements Deque<T> {
         return item;
     }
 
-    @Override
+
     public T removeLast(){
         if(size == 0){
             return null;
@@ -90,7 +91,7 @@ public class LinkedListDeque<T>implements Deque<T> {
         return item;
     }
 
-    @Override
+
     public T get(int index){
         StuffNode p = sentinel.next;
         for(int i = 0; i < index; i += 1){
@@ -111,7 +112,7 @@ public class LinkedListDeque<T>implements Deque<T> {
         return getRecursiveHelper(p,index);
     }
 
-    @Override
+
     public Iterator<T> iterator() {
         return new LinkedListDequeIterator();
     }
@@ -133,7 +134,7 @@ public class LinkedListDeque<T>implements Deque<T> {
             return returnItem;
         }
     }
-    @Override
+
     public boolean equals(Object o){
         if(this == o){
             return true;
@@ -152,19 +153,13 @@ public class LinkedListDeque<T>implements Deque<T> {
         return false;
     }
 
-    @Override
-    public String toString(){
-        List<String> myString = new ArrayList<>();
-        for(T x : this){
-            myString.add(x.toString());
-        }
-        return "["+String.join(",",myString)+"]";
-    }
+
+
 
     public static void main(String[] args) {
 
-        Deque<String> lld1 = new ArrayDeque<>();
-        Deque<String> lld2 = new ArrayDeque<>();
+        ArrayDeque<String> lld1 = new ArrayDeque<>();
+        ArrayDeque<String> lld2 = new ArrayDeque<>();
 
         lld1.addLast("front");
         lld1.addLast("middle");

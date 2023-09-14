@@ -1,8 +1,9 @@
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 
-public class ArrayDeque<T> implements Deque<T> {
+public class ArrayDeque<T> {
     private T[] items;
     private int size;
     private int nextFirst;
@@ -61,7 +62,7 @@ public class ArrayDeque<T> implements Deque<T> {
         return index-1;
     }
     /** Inserts X into the first of the list. */
-    @Override
+
     public void addLast(T item){
         if(size == items.length){
             grow();
@@ -71,7 +72,7 @@ public class ArrayDeque<T> implements Deque<T> {
         size = size + 1;
     }
 
-    @Override
+
     public void addFirst(T item){
         if(size == items.length){
             grow();
@@ -80,7 +81,7 @@ public class ArrayDeque<T> implements Deque<T> {
         nextFirst = minusOne(nextFirst,length);
         size = size + 1;
     }
-    @Override
+
     public T get(int index){
         if(index >= size){
             return null;
@@ -92,17 +93,17 @@ public class ArrayDeque<T> implements Deque<T> {
         return items[firstIndex];
     }
 
-    @Override
+
     public boolean isEmpty(){
         return size == 0;
     }
 
-    @Override
+
     public int size(){
         return size;
     }
 
-    @Override
+
     public void printDeque(){
         int firstIndex = plusOne(nextFirst,length);
         while(firstIndex != nextLast){
@@ -111,7 +112,7 @@ public class ArrayDeque<T> implements Deque<T> {
         }
         System.out.println();
     }
-    @Override
+
     public T removeLast(){
         if(size ==0){
             return null;
@@ -126,7 +127,7 @@ public class ArrayDeque<T> implements Deque<T> {
         }
         return item;
     }
-    @Override
+
     public T removeFirst(){
         if(size == 0){
             return null;
@@ -142,7 +143,7 @@ public class ArrayDeque<T> implements Deque<T> {
         return item;
     }
 
-    @Override
+
     public Iterator<T> iterator(){
         return new ArrayDequeIterator();
     }
@@ -165,7 +166,7 @@ public class ArrayDeque<T> implements Deque<T> {
         }
     }
 
-    @Override
+
     public boolean equals(Object o){
         if(this == o){
             return true;
@@ -183,14 +184,8 @@ public class ArrayDeque<T> implements Deque<T> {
         }
         return false;
         }
-    @Override
-    public String toString(){
-        List<String> myString = new ArrayList<>();
-        for(T x : this){
-            myString.add(x.toString());
-        }
-        return "["+String.join(",",myString)+"]";
-    }
+
+
 
     public void print(){
         System.out.println("test");
@@ -198,8 +193,8 @@ public class ArrayDeque<T> implements Deque<T> {
 
     public static void main(String[] args) {
 
-        Deque<String> lld1 = new ArrayDeque<>();
-        Deque<String> lld2 = new ArrayDeque<>();
+        ArrayDeque<String> lld1 = new ArrayDeque<>();
+        ArrayDeque<String> lld2 = new ArrayDeque<>();
 
         lld1.addLast("front");
         lld1.addLast("middle");

@@ -9,7 +9,7 @@ import java.util.Set;
 */
 
 public class BoyerMoore{
-    final static int ALPHABET_SIZE = 256;
+    //final static int ALPHABET_SIZE = 256;
 
 /** Bad Character skip rule
  * 
@@ -20,61 +20,84 @@ public class BoyerMoore{
  * badCharSkip[b] is the distance between the last byte of pattern
  * and the rightmost occurrence of b in pattern. 
  *
- */    
+ */
+
+/**
+ *         ABABDAAAACAAAABCABAB
+ *         AAACAAAA
+ *
+ *         */
 
 public static int strStr(String text, String pattern){
     char[] textArray = text.toCharArray();
     char[] patternArray = pattern.toCharArray();
 
-    /** preprocess*/
+    /** preprocess to get the bad character table and the good suffix table*/
     int[] badCharSkipTable = makeBadCharSkipTable(patternArray);
-    //HashMap<Character, Integer> map = makeBadCharMap(patternArray);
     int[] goodSuffixSkipTable = makeGoodSuffixSkipTable(patternArray);
 
     /** compare text and pattern from right to left
      * textIndex start from pattern.length()-1,increment by max value of bad character rule and good suffix rule
      * patternIndex start from pattern.length()-1,return to pattern.length -1 if mismatch happens
      * */
-    int tIndex = pattern.length() - 1;
-    while(tIndex < text.length()){
-        int pIndex = pattern.length() - 1;
-        while(pIndex >= 0 && textArray[tIndex] == patternArray[pIndex]){
-            tIndex--;
-            pIndex--;
+    int textPointer = pattern.length() - 1;
+    int patternPointer = pattern.length() - 1;
+    /** loop through the whole text string*/
+    while(textPointer < text.length()){
+        /** compare from right to left*/
+        while(patternPointer >= 0 && textArray[textPointer] == patternArray[patternPointer]){
+            textPointer--;
+            patternPointer--;
         }
         /** found the index*/
-        if(pIndex < 0){
-            return tIndex + 1;
+        if(patternPointer < 0){
+            return textPointer + 1;
         }else {
-            int skip = Math.max(badCharSkipTable[textArray[tIndex]], goodSuffixSkipTable[pIndex]);
-            tIndex += skip;
+            /** not found, update the textPointer and patternPointer*/
+            int skip = Math.max(badCharSkipTable[textArray[textPointer]], goodSuffixSkipTable[patternPointer]);
+            textPointer += skip;
+            patternPointer = pattern.length() - 1;
         }
     }
     return -1;
  }
 
-private static int[] makeBadCharSkipTable(char[] pattern) {
-    // 256 Unicode characters
-    int[] badCharSkipTable = new int[ALPHABET_SIZE];
-    int last = pattern.length - 1 ;
-    for (int i = 0; i < ALPHABET_SIZE; i++) {
-    /** set up all the value to length; */
-        badCharSkipTable[i] = pattern.length;
-    }
-    /** The loop condition is < instead of <= so that the last byte does not
-    * have a zero distance to itself. Finding this byte out of place implies
-    * that it is not in the last position.
-     * */
-    for (int i = 0; i < last; i++) {
-    /** calculate the ASCII number for badCharSkip[i] */
-        int ascii = (int)pattern[i];
-    /**update the value of the characters in pattern */
-        badCharSkipTable[ascii] = last - i;
-    }
-    return badCharSkipTable;
-}
 
-/** alternative:use hashmap to get badCharSkip numbers*/
+ /**bad character rule:
+  * 1.if not in pattern string, skip pattern.length(move the entirety of pattern to past the mismatch point)
+  * 2.if in pattern string,skip = lastindex - index of rightmost mismatch character
+  * 3.overlook the last character in pattern string
+  */
+    private static int[] makeBadCharSkipTable(char[] pattern) {
+        int ALPHABET_SIZE = 256;
+        int[] badCharSkipTable = new int[ALPHABET_SIZE];
+        int lastIndex = pattern.length - 1 ;
+        for (int i = 0; i < ALPHABET_SIZE; i++) {
+    /** set up all the value to length; */
+            badCharSkipTable[i] = pattern.length;
+        }
+    /** The loop condition is < instead of <= to make sure we don't align in the wrong direction
+     * */
+        for (int i = 0; i < lastIndex; i++) {
+    /** calculate the ASCII number for badCharSkip[i] */
+            int ascii = (int)pattern[i];
+    /**update the value of the characters in pattern */
+            badCharSkipTable[ascii] = lastIndex - i;
+        }
+        return badCharSkipTable;
+    }
+
+    /** eg:
+     * Pattern              ABCDABEA
+     * index i              0123456
+     * unique char           A   B   C   D   E          ?            (? means all the rest char)
+     * array index          65  66  67  68  69   0-64 && 70-255
+     * set to length        8    8   8   8   8        8
+     * last index = 7
+     * update(lastindex-i)  3    2   5   4   1        8
+     */
+
+    /** alternative:use hashmap to get badCharSkip numbers*/
 private static HashMap makeBadCharMap(char[] pattern){
     HashMap<Character, Integer> map = new HashMap();
     for(int i = 0; i < pattern.length - 1; i++)
@@ -84,9 +107,13 @@ private static HashMap makeBadCharMap(char[] pattern){
 
 /** Good Suffix skip table
  * case 1. The matched suffix occurs elsewhere in pattern (with a different
- * byte preceding it that we might possibly match). In this case, we can
- * shift the matching frame to align with the next suffix chunk. For
- * example, the pattern "mississi" has the suffix "issi" next occurring
+ * byte preceding it that might match). In this case, we can
+ * shift the matching frame to align with the next suffix chunk.
+ * Text:        XISMISSISSI
+ * Pattern:     MISSISSI
+ * shift:          MISSISSI
+ * For
+ *example, the pattern "mississi" has the suffix "issi" next occurring
  * (in right-to-left order) at index 1,the longest common prefix length is 5,
  * the common suffix length is 4 so goodSuffixSkipTable[3] =
  * pattern.length + len(suffix) - len(prefix)= 8+4-5 = 7.
@@ -98,12 +125,13 @@ private static HashMap makeBadCharMap(char[] pattern){
  * suffix. For example, in the pattern "ABCEFCABC",if mismatch happened at index 3
  * Text:        XXXXFCABCEFABC
  * pattern:     ABCEFCABC
+ * Shift:             ABCEFCABC
  * First three character in pattern are same as last three.
  * The length of prefix is 3.The length of suffix is
  * pattern.length - 1- mismatchIndex = 9-1-3=5
  * goodSuffixSkipTable[3] == pattern.length + len(suffix) - len(prefix)= 9 + 5 -3 == 11.
  * 
- * cast 3. no matched suffix occurs; no prefix equal to suffix.
+ * cast 3. no matched suffix occurs; no prefix equal to suffix.then shift P by m (length of P) places to the right.
  * it is a special case of case 2 when the prefix length = 0
  */
 
@@ -145,29 +173,53 @@ private static int[] makeGoodSuffixSkipTable(char[] pattern){
  */
 private static void makeGoodSuffixSkipTableCase1(char[] pattern,int[] goodSuffixSkipTable){
     /** start from last index to get the longest suffix in case following case happens:
-     * BCDACDECD
-     *  BCDACDEC
-     *   BCDACDE
-     *    DCBACD  longest prefix is 2
-     *     BCDAC
-     *      BCDA
-     *       BCD  longest prefix is 2, happened before,overlook
+     pattern: BCDACDECD
+     *        BCDACDEC
+     *        BCDACDE
+     *        DCBACD  longest common suffix length is 2
+     *        BCDAC
+     *        BCDA
+     *        BCD  longest common suffix length is 2, happened before,overlook
      *        BC
      * */
 
-    /** use a set to store all the longestCommonSuffixLength to filter in future */
+    /** use a set to store all the longestCommonSuffixLength to overlook the shorter prefix length */
     Set<Integer> longestLengthSet = new HashSet<>();
+    int lastIndex = pattern.length-1;
     /** overlook the last index because there is no suffix
      * overlook the first index because meaningful prefix length starts from 2*/
-    for(int i = pattern.length-2; i >= 1 ; i--){
+    for(int i = lastIndex - 1; i >= 1 ; i--){
         int prefixLength = i + 1;
+        /** make a copy array to compare it with the pattern array to get the longest common suffix
+         * pattern:    A  D  A  C  D  B  C  D  B  C  D
+         * length: 11
+         * index       0  1  2  3  4  5  6  7  8  9
+         * start from index 9, prefix length = 10
+         * copyPrefix:A  D  A  C  D  B  C  D  B  C
+         * compute the longest common suffix of pattern and copyPrefix
+         * */
         char[] prefix = new char[prefixLength];
         System.arraycopy(pattern,0, prefix, 0, prefixLength);
         int longestCommonSuffixLength = countLongestCommonSuffixLength(pattern,prefix);
+        /** if the longest common suffix length is in the set, skip*/
         if(longestCommonSuffixLength > 0 && !longestLengthSet.contains(longestCommonSuffixLength)){
+            /** if longestCommonSuffixLength is not in set,
+             * add into the set first
+             * then compute the mismatched index and update the goodSuffixSkipTable*/
             longestLengthSet.add(longestCommonSuffixLength);
-            int mismatchedIndex = pattern.length - 1 - longestCommonSuffixLength;
-            goodSuffixSkipTable[mismatchedIndex] = pattern.length + longestCommonSuffixLength - prefixLength;
+            /** eg:
+             * pattern:    A  D  A  C  D  B  C  D  B  C  D
+             * lastIndex:10
+             * index       0  1  2  3  4  5  6  7  8  9  10
+             * compare:    A  D  A  C  D  B  C  D  B  C  D
+             * with   :    A  D  A  C  D
+             * longestCommonSuffixLength = 2
+             *  mismatched index = lastIndex - longestCommonSuffixLength=10-2=8
+             *
+             * */
+            int mismatchedIndex = lastIndex - longestCommonSuffixLength;
+            int suffixLength = longestCommonSuffixLength;
+            goodSuffixSkipTable[mismatchedIndex] = pattern.length + suffixLength - prefixLength ;
         }
     }
 }
@@ -191,6 +243,10 @@ private static void makeGoodSuffixSkipTableCase1(char[] pattern,int[] goodSuffix
  *                    
 */
 private static int countLongestCommonSuffixLength(char[] pattern, char[] prefix){
+    /**
+     *    ADACD
+     * ACACDACD
+     * */
     int i;
     for(i = 0; i < pattern.length && i < prefix.length;i++){
         if(pattern[pattern.length - 1- i] != prefix[prefix.length - 1- i]){
@@ -207,14 +263,14 @@ private static int countLongestCommonSuffixLength(char[] pattern, char[] prefix)
  * if mismatch happend at index 4
  * compare      DD
  * with         DDDBDDD
- * to get same prefix length
+ * to get same prefix length = 2
  */
 private static int[] countPrefixLength(char[] pattern){
     int lastIndex = pattern.length - 1;
     int lastPrefixLength = 0;
     int[] prefixLengthTable = new int[pattern.length];
-    prefixLengthTable[pattern.length - 1] = pattern.length;
-    /** first meaningful mismatched index should be pattern.length - 1;*/
+    prefixLengthTable[lastIndex] = 0;
+    /** first meaningful mismatched index should be lastindex - 1;*/
     for(int i = lastIndex - 1; i >= 0; i--){
         int prefixLength = 0;
         int suffixLength = lastIndex - i;
